@@ -1,5 +1,5 @@
 import InfiniteScroll from "react-infinite-scroller";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "react-query";
 
 import { Person } from "./Person";
 
@@ -10,14 +10,31 @@ const fetchUrl = async (url) => {
 };
 
 export const InfinitePeople = () => {
-  const { data, fetchNextPage, hasNextPage } = useInfiniteQuery(
+  const { data, fetchNextPage, hasNextPage, isLoading, isError, error } = useInfiniteQuery(
     "sw-people",
-    ({ pageParam = initialUrl }) => fetchUrl(pageParam),
+    ( {pageParam = initialUrl} ) => fetchUrl(pageParam),
     {
       getNextPageParam: (lastPage) => lastPage.next || undefined
     }
   );
 
+  if(isLoading) return <div className={"loading"}>Loading</div>
+  if(isError) return <div>{error.toString()}</div>
 
-  return <InfiniteScroll />;
+  return (
+    <InfiniteScroll loadMore={fetchNextPage} hasMore={hasNextPage}>
+    {data.pages.map((pageData) => {
+      return pageData.results.map((person) => {
+        return (
+          <Person
+            key={person.name}
+            name={person.name}
+            eyeColor={person.eye_color}
+            hairColor={person.hair_color}
+          />)
+        })
+      }
+    )}
+  </InfiniteScroll>
+  );
 }
